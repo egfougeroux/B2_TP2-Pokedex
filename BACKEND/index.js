@@ -14,6 +14,8 @@ const PORT = 5001;
 const POKEDEX_SRC = "./DATA/pokedex.json";
 // Définir l'emplacement des images
 const IMAGES_SRC = "./FILES/images";
+// Définir l'emplacement des types
+const TYPES_SRC = "./DATA/types.json";
 
 
 // ==========================================
@@ -105,6 +107,36 @@ function findOneByName(request, response) {
   }
 }
 
+/**
+ * Renvoie la liste complète des types de Pokémon
+ */
+function findAllTypes(request, response) {
+  let data = fs.readFileSync(TYPES_SRC);
+  let types = JSON.parse(data);
+  response.send(types);
+}
+
+/**
+ * Renvoie tous les Pokémon appartenant à un type spécifique
+ */
+function findPokemonsByType(request, response) {
+  let data = fs.readFileSync(POKEDEX_SRC);
+  let pokedex = JSON.parse(data);
+
+  let targetType = request.params.type.toLowerCase();
+
+  // Filtrage insensible à la casse
+  let results = pokedex.filter(pokemon => {
+    return pokemon.type.some(t => t.toLowerCase() === targetType);
+  });
+
+  if (results.length > 0) {
+    response.send(results);
+  } else {
+    response.status(404).send("Aucun Pokémon trouvé pour ce type !");
+  }
+}
+
 // ==========================================
 // Déclaration des routes
 // ==========================================
@@ -112,7 +144,11 @@ function findOneByName(request, response) {
 router.get('/pokemons', findAllPokemon);
 router.get('/pokemons/random', findOneByRandom);
 router.get('/pokemons/:id', findOneById);
+router.get('/types', findAllTypes);
+router.get('/pokemons/type/:type', findPokemonsByType);
 router.get('/pokemons/:name', findOneByName);
+
+router.use('/images', express.static(IMAGES_SRC));
 
 // Application du préfixe global imposé par le sujet
 app.use('/api/v1', router);
