@@ -1,9 +1,9 @@
 # TP - Serveur API REST Pokédex
 
-**Auteur :** Emma-Gabrielle FOUGEROUX <by>
-**Classe :** BTS SIO SLAM2 <by>
-**Établissement :** Fénelon - La Rochelle <by>
-**Date :** Octobre 2026 <by>
+**Auteur :** Emma-Gabrielle FOUGEROUX <br>
+**Classe :** BTS SIO SLAM2 <br>
+**Établissement :** Fénelon - La Rochelle <br>
+**Date :** Octobre 2026 <br>
 **Module :** Bloc 2 - Solutions logicielles et applicatives
 
 ---
