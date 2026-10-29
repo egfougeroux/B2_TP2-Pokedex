@@ -153,3 +153,17 @@ Les requêtes ont été testées et validées à l'aide de :
 ## 7. Fonctionnalités avancées (v2)
 
 * **Contrôle de flux (Rate Limiting) :** Mise en place d'une fonction de limitation du nombre de requêtes par adresse IP sur une fenêtre temporelle donnée pour prévenir les abus de requêtes. Si la limite est dépassée, le serveur renvoie un code HTTP `429 Too Many Requests`.
+
+### Distribution des ressources statiques (/images)
+
+* **Objectif :** Permettre au futur client web (Frontend) de charger directement les illustrations officielles des Pokémon.
+* **Mise en œuvre :** Utilisation du middleware `express.static` appliqué au sous-chemin `/images` du routeur Express :
+  `router.use('/images', express.static(IMAGES_SRC));`
+* **Exemple d'appel :** `GET /api/v1/images/025.png` renvoie l'image PNG de Pikachu avec l'en-tête `Content-Type: image/png`.
+
+### Gestion des types de Pokémon (/types et /pokemons/type/:type)
+
+* **GET `/api/v1/types` :** Renvoie la liste complète des types disponibles et leurs dénominations multilingues à partir de `DATA/types.json`.
+* **GET `/api/v1/pokemons/type/:type` :** Filtre le Pokédex pour retourner l'ensemble des créatures associées au type spécifié en paramètre d'URL (insensible à la casse).
+  * Statut `200 OK` avec le tableau filtré en cas de correspondance.
+  * Statut `404 Not Found` si aucun Pokémon n'appartient au type demandé.
