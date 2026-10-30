@@ -152,4 +152,59 @@ Les requêtes ont été testées et validées à l'aide de :
 
 ## 7. Fonctionnalités avancées (v2)
 
-* **Contrôle de flux (Rate Limiting) :** Mise en place d'une fonction de limitation du nombre de requêtes par adresse IP sur une fenêtre temporelle donnée pour prévenir les abus de requêtes. Si la limite est dépassée, le serveur renvoie un code HTTP `429 Too Many Requests`.
+### 1. Distribution des ressources statiques (/images)
+
+* **Objectif :** Permettre au futur client web (Frontend) de charger directement les illustrations officielles des Pokémon.
+* **Mise en œuvre :** Utilisation du middleware `express.static` appliqué au sous-chemin `/images` du routeur Express :
+  `router.use('/images', express.static(IMAGES_SRC));`
+* **Exemple d'appel :** `GET /api/v1/images/025.png` renvoie l'image PNG de Pikachu avec l'en-tête `Content-Type: image/png`.
+
+### 2. Gestion des types de Pokémon (/types et /pokemons/type/:type)
+
+* **GET `/api/v1/types` :** Renvoie la liste complète des types disponibles et leurs dénominations multilingues à partir de `DATA/types.json`.
+* **GET `/api/v1/pokemons/type/:type` :** Filtre le Pokédex pour retourner l'ensemble des créatures associées au type spécifié en paramètre d'URL (insensible à la casse).
+  * Statut `200 OK` avec le tableau filtré en cas de correspondance.
+  * Statut `404 Not Found` si aucun Pokémon n'appartient au type demandé.
+
+### 3. Middleware de journalisation (`debugRoute`)
+
+* **Rôle :** Intercepte chaque requête entrante sur le serveur afin de tracer l'activité dans le terminal d'administration.
+* **Informations relevées :**
+  * L'horodatage précis au format local (`HH:MM:SS`) via l'objet natif `Date`.
+  * La méthode HTTP employée (`GET`, `POST`, etc.) via `request.method`.
+  * L'URL ciblée par le client via `request.originalUrl`.
+* **Principe technique :** Après l'affichage du log, la méthode `next()` transmet le flux au middleware suivant sans bloquer le traitement.
+
+Exemple de sortie console générée :
+```text
+[10:30:15] Requête reçue : GET sur l'adresse /api/v1/pokemons/random
+```
+
+### 4. Middleware de régulation de flux (`limitRequests`)
+
+* **Rôle :** Protège le serveur contre le déni de service (DDoS) ou l'asphyxie par requêtes massives répétées.
+* **Paramétrage retenu :**
+  * Plafond autorisé : **10 requêtes par minute**.
+  * Fenêtre temporelle : cycle glissant de **60 secondes** (60 000 ms).
+* **Algorithme mis en œuvre :**
+  1. L'Incrémentation d'un compteur global `requestCount` à chaque appel.
+  2. Comparaison du compteur avec la constante `MAX_REQUESTS`.
+  3. Réinitialisation automatique du compteur à 0 toutes les 60 secondes grâce à la fonction asynchrone `setInterval()`.
+* **Gestion des statuts HTTP :** 
+  * **Cas nominal (inférieur ou égal au seuil) :** La requête est validée, l'exécution se poursuit vers le contrôleur (`next()`) avec un statut `200 OK`.
+  * **Dépassement de quota :** Blocage immédiat de la requête avec envoi du statut HTTP `429 Too Many Requests` et d'un message d'avertissement.
+
+Exemple de réponse en cas de saturation :
+```text
+Statut HTTP : 429 Too Many Requests
+Corps : Erreur 429 : Trop de requêtes ! Veuillez patienter une minute.
+```
+
+### 3. Procédure de test et validation
+
+1. Lancement du serveur en mode surveillance :
+```text
+node --watch index.js
+```
+1. Émission de 11 requêtes consécutives sur `GET /api/v1/pokemons/random` via Postman ou un navigateur web.
+2. Constat : les 10 premières requêtes retournent le statut `200 OK`. La 11ᵉ requête déclenche le statut `429 Too Many Requests`.

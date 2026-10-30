@@ -138,6 +138,68 @@ function findPokemonsByType(request, response) {
 }
 
 // ==========================================
+// Middleware 1 : Journalisation / Débogage
+// ==========================================
+
+/**
+ * Affiche dans la console du serveur chaque requête reçue avec l'heure
+ */
+function debugRoute(request, response, next) {
+  // 1. Récupération de l'heure courante au format lisible
+  let date = new Date().toLocaleTimeString();
+
+  // 2. Affichage des détails : [HEURE] MÉTHODE /chemin
+  console.log(`[${date}] ${request.method} ${request.originalUrl}`);
+
+  // 3. Passage au middleware ou à la route suivante
+  next();
+}
+
+// ==========================================
+// Middleware 2 : Limitation de requêtes (Rate Limiting)
+// ==========================================
+
+// Paramètres de la limitation
+const MAX_REQUESTS = 10; // Nombre maximum de requêtes autorisées par minute
+let requestCount = 0;    // Compteur de requêtes
+
+// Réinitialisation automatique du compteur toutes les 60 secondes (60 000 ms)
+setInterval(() => {
+  requestCount = 0;
+  console.log("[INFO] Compteur de requêtes réinitialisé à 0.");
+}, 60000);
+
+/**
+ * Vérifie que le serveur n'a pas dépassé son quota de requêtes.
+ */
+function limitRequests(request, response, next) {
+  // 1. Incrémenter le nombre total de requêtes reçues
+  requestCount++;
+
+  // 2. Afficher l'état du compteur dans la console
+  console.log(`[RATE LIMIT] Requête n° ${requestCount} / ${MAX_REQUESTS}`);
+
+  // 3. Vérifier si la limite est dépassée
+  if (requestCount > MAX_REQUESTS) {
+    // Si la limite est franchie : on renvoie le code HTTP 429 et un message
+    return response.status(429).send("Erreur 429 : Trop de requêtes ! Veuillez patienter une minute.");
+  }
+
+  // 4. Si tout est bon, on continue vers la route demandée
+  next();
+}
+
+// ==========================================
+// Application des middlewares
+// ==========================================
+
+// 1. On active d'abord l'affichage des logs
+router.use(debugRoute);
+
+// 2. On active ensuite la protection contre le spam
+router.use(limitRequests);
+
+// ==========================================
 // Déclaration des routes
 // ==========================================
 
