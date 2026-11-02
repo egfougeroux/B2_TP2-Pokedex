@@ -1,0 +1,189 @@
+openapi: 3.0.3
+info:
+  title: Pokédex API
+  description: API REST permettant d'interroger et de gérer les données du Pokédex (809 Pokémon) et leurs types associés.
+  version: 1.0.0
+  contact:
+    name: Emma-Gabrielle FOUGEROUX - BTS SIO SLAM2
+
+servers:
+  - url: http://0.0.0.0:5001/api/v1
+    description: Serveur local / VM (Port 5001)
+
+paths:
+  /pokemons:
+    get:
+      summary: Retourne tous les Pokémon
+      description: Renvoie la liste intégrale des 809 Pokémon disponibles dans le Pokédex.
+      responses:
+        '200':
+          description: Liste des Pokémon récupérée avec succès.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pokemon'
+        '429':
+          description: Quota dépassé (Trop de requêtes).
+
+  /pokemons/random:
+    get:
+      summary: Retourne un Pokémon aléatoire
+      description: Sélectionne et retourne une créature au hasard dans le catalogue.
+      responses:
+        '200':
+          description: Un Pokémon tiré au sort.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pokemon'
+        '429':
+          description: Quota dépassé (Trop de requêtes).
+
+  /pokemons/{id}:
+    get:
+      summary: Retourne un Pokémon par son identifiant numérique
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: L'identifiant unique du Pokémon (entre 1 et 809).
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Détails du Pokémon trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pokemon'
+        '404':
+          description: Pokémon introuvable pour cet identifiant.
+        '429':
+          description: Quota dépassé (Trop de requêtes).
+
+  /pokemons/{name}:
+    get:
+      summary: Retourne un Pokémon par son nom
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Le nom usuel du Pokémon (français, anglais, etc. et insensible à la casse).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Détails du Pokémon trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pokemon'
+        '404':
+          description: Pokémon introuvable pour ce nom.
+        '429':
+          description: Quota dépassé (Trop de requêtes).
+
+  /types:
+    get:
+      summary: Retourne tous les types de Pokémon
+      description: Renvoie la liste complète des types avec leurs traductions multilingues.
+      responses:
+        '200':
+          description: Liste des types disponibles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Type'
+        '429':
+          description: Quota dépassé (Trop de requêtes).
+
+  /pokemons/type/{type}:
+    get:
+      summary: Filtre les Pokémon par type
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: Nom du type recherché (ex. Feu, Water, etc.).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tableau des Pokémon correspondant à ce type.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pokemon'
+        '404':
+          description: Aucun Pokémon trouvé pour ce type.
+        '429':
+          description: Quota dépassé (Trop de requêtes).
+
+components:
+  schemas:
+    Pokemon:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 25
+        name:
+          type: object
+          properties:
+            english:
+              type: string
+              example: Pikachu
+            japanese:
+              type: string
+              example: ピカチュウ
+            chinese:
+              type: string
+              example: 皮卡丘
+            french:
+              type: string
+              example: Pikachu
+        type:
+          type: array
+          items:
+            type: string
+          example: ["Electric"]
+        base:
+          type: object
+          properties:
+            HP:
+              type: integer
+              example: 35
+            Attack:
+              type: integer
+              example: 55
+            Defense:
+              type: integer
+              example: 40
+            Sp. Attack:
+              type: integer
+              example: 50
+            Sp. Defense:
+              type: integer
+              example: 50
+            Speed:
+              type: integer
+              example: 90
+
+    Type:
+      type: object
+      properties:
+        english:
+          type: string
+          example: Electric
+        chinese:
+          type: string
+          example: 电
+        japanese:
+          type: string
+          example: でんき
