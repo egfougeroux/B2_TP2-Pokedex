@@ -220,7 +220,6 @@ app.use('/api/v1', router);
 // ==========================================
 app.listen(
   PORT,
-  '127.0.0.1',
   () => {
      console.log('Server Pokedex is listening on ' + PORT);
   }
